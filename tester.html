@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<!-- when script is in head, it will run before page loads-->
+
+<head>
+        <link href="minesweeper.css" rel ="stylesheet"/>
+
+</head>
+
+<body onload = "Difficulty(15)">
+
+    <p>Minesweeper</p>
+    <div class= "wrapper">
+            
+            <button id = "easy" onclick ="Difficulty(15)" > Easy </button>
+            <button id = "medium" onclick ="Difficulty(25)"> Medium </button>
+            <button id = "hard" onclick ="Difficulty(30)"> Hard </button>
+            <button id = "reset">Reset</button> 
+    </div>
+
+  
+   
+    <table id="table" align="center"></table>
+    <script>
+        const size = 10
+        document.getElementById('table').style.pointerEvents = 'auto'; 
+        let tables = document.getElementsByTagName("table")[0];
+        let rows = tables.getElementsByTagName("tr");
+            function Difficulty(value){
+
+                //re-enables onclick 
+                document.getElementById('table').style.pointerEvents = 'auto'; 
+                //reload the table
+                reload()
+                let grid = []
+                let testBoard = initializegrid(grid)
+                testBoard = addBombs(testBoard,value)
+                testBoard = updatetable(testBoard)
+                let revealBoard = testBoard
+                let display = testBoard
+                let displayboard = createTable(testBoard)
+                displaygrid(display)
+                printgrid(testBoard)
+                getPosition(display, revealBoard)
+
+                document.getElementById("reset").onclick = function(){
+                    document.getElementById('table').style.pointerEvents = 'auto'; 
+                //reload the table
+                    reload()
+                    let grid = []
+                    let testBoard = initializegrid(grid)
+                    testBoard = addBombs(testBoard,value)
+                    testBoard = updatetable(testBoard)
+                    let revealBoard = testBoard
+                    let display = testBoard
+                    let displayboard = createTable(testBoard)
+                    displaygrid(display)
+                    printgrid(testBoard)
+                    getPosition(display, revealBoard)
+                }
+            }
+
+        //reload webpage
+        function reload() {
+            var Parent = document.getElementById("table");
+            while(Parent.hasChildNodes())
+            {
+            Parent.removeChild(Parent.firstChild);
+            }
+        }
+
+    function createExplosion() {
+        let audio = new Audio('wow.mp3');
+        audio.play();
+    }
+
+        function resetMark(table){
+            for(let i = 0; i <= 10; i++){
+                for(let j = 0; j <= 10; j++){
+                    table[i][j] = "0"
+                }
+            }
+        }
+
+        //Checks if cell has been visited or "marked"
+        function markRead(row, col, table){
+            table[row][col] = "mark"
+            displaygrid(table)
+            return table
+        }
+        function revealEmptyCells(row, col, table, flaggrid){
+            if (row < 0 || row > table.length -1 || col < 0 || col > table.length- 1) return;
+                if(table[row][col] == "0" && flaggrid[row][col] != "mark"){
+                    markRead(row, col, flaggrid)
+                    tables.rows[row].cells[col].innerHTML = "0"
+                    checkSurroundingCells(row, col, table)
+                    revealEmptyCells(row + 1, col, table, flaggrid)
+                    checkSurroundingCells(row + 1, col, table)
+                    revealEmptyCells(row - 1, col, table, flaggrid)
+                    checkSurroundingCells(row - 1, col, table)
+                    revealEmptyCells(row, col - 1, table, flaggrid)
+                    checkSurroundingCells(row, col - 1, table)
+                    revealEmptyCells(row, col + 1, table, flaggrid)
+                    checkSurroundingCells(row, col + 1, table)
+                    revealEmptyCells(row - 1, col - 1, table, flaggrid)
+                    checkSurroundingCells(row - 1, col - 1, table)
+                    revealEmptyCells(row + 1, col - 1, table, flaggrid)
+                    checkSurroundingCells(row + 1, col - 1, table)
+                    revealEmptyCells(row - 1, col + 1, table, flaggrid)
+                    checkSurroundingCells(row - 1, col + 1, table)
+                    revealEmptyCells(row + 1, col + 1, table, flaggrid)
+                    checkSurroundingCells(row + 1, col + 1, table)
+                    return;
+                }else{
+                    return;
+                }
+            }
+        
+            function addBombs(table, difficulty) {
+                let i = 0;
+                while (i < difficulty) {
+                    if (table[Math.floor(Math.random() * 10)][Math.floor(Math.random() * 10)] != "A") {
+                        table[Math.floor(Math.random() * 10)][Math.floor(Math.random() * 10)] = "A"
+                        i++;
+                    }
+                }
+                return table
+            }
+
+            // fills empty board with values around bombs
+            function updatetable(table){
+                for (let r = 0; r < table.length; r++) {
+                    for (let c = 0; c < table[r].length; c++) {
+                    if(table[r][c] != "A"){
+                            table[r][c] = countMines(r,c,table,"A");
+                    }
+                    }
+                }
+            return table;
+            }
+        
+            function printgrid(table) {
+                console.log(table)
+            }
+
+            function initializegrid(table) {
+                for (g = 0; g < size; g++) {
+                    table[g] = [];
+                    for (i = 0; i < size; i++) {
+                        table[g][i] = 0;
+                    }
+                }
+                return table;
+            }
+
+            function createTable(displayboard) {
+                for (let row = 0; row < size; row++) {
+                   let rows = table.insertRow(row);
+                    for (let col = 0; col < size; col++) {
+                        let coll = rows.insertCell(col);
+                        coll.innerHTML = (" ")
+                    }
+                }
+                
+            }
+            // check if cell is within boundaries
+            function isValid(row, col) {
+                return (row >= 0) && (row < size) &&
+                    (col >= 0) && (col < size);
+            }
+            function displaygrid(checktable) {
+                for (let i = 0; i <checktable.length; i++) {
+                    let cells = rows[i].getElementsByTagName("td");
+                    for (let j = 0; j < checktable[i].length; j++) {
+                        if (checktable[i][j] == 'A' || checktable[i][j] == 'B') {
+                            table.rows[i].cells[j].innerHTML = " "
+                        } else if (checktable[i][j] == "0") {
+                            table.rows[i].cells[j].innerHTML = " "
+                        } else {
+
+                        }
+                    }
+                }
+
+            }
+            function getPosition(newt2,flaggrid) {
+            
+                for (var i = 0; i < newt2.length; i++) {
+                    //Get the cells in the given row
+                    let cells = rows[i].getElementsByTagName("td");
+                    for (var j = 0; j < newt2[i].length; j++) {
+                        // Cell Object
+                        let cell = cells[j];
+                        cell.rowIndex = i;
+                        cell.colIndex = j;
+                        // Track with onclick
+                
+                        cell.onclick = function () {
+                            
+                            if (newt2[this.rowIndex][this.colIndex]!="A" && newt2[this.rowIndex][this.colIndex]!="0") {
+                                let count = countMines(this.rowIndex, this.colIndex, newt2, "A");
+                                table.rows[this.rowIndex].cells[this.colIndex].innerHTML = count
+                            } else if (newt2[this.rowIndex][this.colIndex] == "0") {
+                                revealEmptyCells(this.rowIndex, this.colIndex, newt2, flaggrid)
+                                markRead(this.rowIndex, this.colIndex, flaggrid)
+                            }else if(newt2[this.rowIndex][this.colIndex]=="A"){
+                                createExplosion()
+                                console.log("bombs")
+                                displayAllBombs(newt2)
+                                
+                                
+                                
+                                document.getElementById('table').style.pointerEvents = 'none';
+                                
+                            }
+
+                        };
+                    }
+                }
+
+            }
+            function displayAllBombs(grid){
+
+                let img = document.createElement('img');
+                img.src = "https://www.google.ca/url?sa=i&source=images&cd=&cad=rja&uact=8&ved=2ahUKEwjMmaWJ4fjeAhUKHzQIHcbFBEUQjRx6BAgBEAU&url=https%3A%2F%2Fwww.onlinewebfonts.com%2Ficon%2F566371&psig=AOvVaw0eTuZT54gaAtUj6VWqhlMw&ust=1543551899544886";
+                
+                for(let i = 0 ; i <grid.length; i++){
+                    for(let j = 0; j < grid[i].length; j++){
+                        if(grid[i][j] == 'A'){
+                        
+                            table.rows[i].cells[j].innerHTML = "⚪";
+                            //table.rows[i].cells[j].appendChild(img)
+                            
+                        }
+                    }
+                }
+
+            }
+            function checkSurroundingCells(i, c, table){
+
+                if(isValid(i, c) == true){
+                    if(table[i][c] == "mark"){
+                        if(isValid(i+1, c) == true){
+                            if (table[i+1][c]!= "A" && table[i+1][c] !="mark" ){
+                                tables.rows[i+1].cells[c].innerHTML = table[i+1][c];
+                            }
+                        }
+                        if(isValid(i-1, c) == true){
+                            if(table[i-1][c] !="A", table[i-1][c] != "mark"){
+                                tables.rows[i-1].cells[c].innerHTML = table[i-1][c];
+                            }
+                        }
+                        if(isValid(i, c+1) == true){
+                            if(table[i][c+1] != "A" && table[i][c+1] !=  "mark"){
+                                tables.rows[i].cells[c+1].innerHTML = table[i][c+1];
+                            }
+                        }
+                        if(isValid(i, c-1) == true){
+                            if( table[i][c-1] != "A" &&  table[i][c-1] !=  "mark"){
+                                tables.rows[i].cells[c-1].innerHTML = table[i][c-1];
+                            }
+                        }
+                        if(isValid(i-1, c-1) == true){
+                            if(table[i-1][c-1] != "A" && table[i-1][c-1] != "mark"){
+                                tables.rows[i-1].cells[c-1].innerHTML = table[i-1][c-1];
+                            }
+                        }
+                        if(isValid(i-1, c+1) == true){
+                            if(table[i-1][c+1] != "A" && table[i-1][c+1] != "mark" ){
+                                tables.rows[i-1].cells[c+1].innerHTML = table[i-1][c+1];
+                            }
+                        }
+                        if(isValid(i+1, c-1) == true){
+                            if(table[i+1][c-1] != "A" && table[i+1][c-1] !=  "mark"){
+                                tables.rows[i+1].cells[c-1].innerHTML = table[i+1][c-1];
+                            }
+                        }
+                        if(isValid(i+1, c+1) == true){
+                            if(table[i+1][c+1]!= "A" && table[i+1][c+1]!= "mark"){
+                                tables.rows[i+1].cells[c+1].innerHTML = table[i+1][c+1];
+                            }
+                    }else{
+                        return;
+                    }
+                }
+            }
+            }
+            function countMines(row, col, table,letter) {
+                let count = 0;
+                if (isValid(row - 1, col) == true) {
+                    if (table[row - 1][col] == letter) {
+                        count++;
+                    }
+                }
+                if (isValid(row + 1, col) == true) {
+                    if (table[row + 1][col] == letter) {
+                        count++;
+                    }
+                }
+                if (isValid(row, col + 1) == true) {
+                    if (table[row][col + 1] ==letter) {
+                        count++;
+                    }
+                }
+                if (isValid(row, col - 1) == true) {
+                    if (table[row][col - 1] == letter) {
+                        count++;
+                    }
+                }
+                if (isValid(row - 1, col + 1) == true) {
+                    if (table[row - 1][col + 1] == letter) {
+                        count++;
+                    }
+                }
+                if (isValid(row - 1, col - 1) == true) {
+                    if (table[row - 1][col - 1] ==letter) {
+                        count++;
+                    }
+                }
+                if (isValid(row + 1, col + 1) == true) {
+                    if (table[row + 1][col + 1] == letter) {
+                        count++;
+                    }
+                }
+                if (isValid(row + 1, col - 1) == true) {
+                    if (table[row + 1][col - 1] == letter) {
+                        count++;
+                    }
+                }
+                return count;
+    }
+
+    </script>
+
+</body>
+</html>
+
